@@ -150,19 +150,13 @@ def dynamic_visualization(visualization_data):
             print("Error: Frame index out of range")
             return  # Prevent index errors
 
-        # Smooth doctor movement: Interpolate between districts
+        # Doctor's position
         if frame > 0:
-            prev_district = current_districts[frame - 1]
-            current_district = current_districts[frame]
-            # Interpolate position
-            prev_pos = np.array(node_positions[prev_district])
-            current_pos = np.array(node_positions[current_district])
-            interpolation_factor = (times[frame] - times[frame - 1]) / (avg_travel_times[prev_district][current_district] or 1)  # Ensure no division by zero
-            doctor_pos = prev_pos + interpolation_factor * (current_pos - prev_pos)
+            doctor_pos = node_positions[current_districts[frame - 1]]
         else:
-            doctor_pos = node_positions[current_district]
+            doctor_pos = (0, 0)  # Start at district 1
 
-        doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])  # Update doctor's position smoothly
+        doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])  
 
         return doctor_marker
 
