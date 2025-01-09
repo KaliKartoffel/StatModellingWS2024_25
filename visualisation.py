@@ -4,6 +4,7 @@ import networkx as nx
 import pandas as pd
 import numpy as np
 from matplotlib.animation import FuncAnimation
+import time
 from main import EmergencySimulator  # Importing the classes from main.py
 
 
@@ -73,7 +74,6 @@ def dynamic_time_series(visualization_data):
     plt.show()
 
 
-
 def dynamic_visualization(visualization_data):
     # Populations and average travel times between districts
     populations = [10000, 35000, 25000, 25000, 15000, 20000, 45000, 40000, 15000, 35000]
@@ -92,8 +92,8 @@ def dynamic_visualization(visualization_data):
 
     # Extract data for visualization
     times = [data["total_time_passed"] for data in visualization_data]
+    next_times = times.copy()
     current_districts = [data["current_dist"] for data in visualization_data]
-    traveling_status = [data["currently_traveling"] for data in visualization_data]
 
     # Create circular graph layout
     num_districts = len(populations)
@@ -139,31 +139,52 @@ def dynamic_visualization(visualization_data):
     doctor_marker, = ax.plot([], [], "ro", label="Doctor", markersize=10)
     ax.legend()
 
+    # Initialize the figure and plot elements
+    frame_number_text = ax.text(0.05, 0.95, "", transform=ax.transAxes, fontsize=12, color="black", ha="left", va="top")
+
+    t0 = round(time.time() * 1000)
+
     def init():
         """Initialize the lines and scatter."""
         doctor_marker.set_data([], [])
-        return doctor_marker
+        frame_number_text.set_text("")  # Clear text on initialization
+        return doctor_marker, frame_number_text
 
     def update(frame):
         """Update the lines and scatter with new data."""
-        if frame >= len(visualization_data):
+        if frame >= max(times):
             print("Error: Frame index out of range")
             return  # Prevent index errors
+        
+        current_time = round(time.time() * 1000) - t0
+        next_time = next_times[0]
 
-        # Doctor's position
-        if frame > 0:
-            doctor_pos = node_positions[current_districts[frame - 1]]
-        else:
-            doctor_pos = (0, 0)  # Start at district 1
+        # If the current time matches one of the times in the list, update the doctor's position
+        if current_time >= next_time:
+            print(f"found frame {next_time}")
+            
+            # Find the corresponding district for this time
+            idx = times.index(next_time)
+            doctor_pos = node_positions[current_districts[idx]]
+            doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])
 
-        doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])  
+            # Update the next time
+            next_times.pop(0)
 
-        return doctor_marker
+        # Update the frame number text
+        frame_number_text.set_text(f"Time: {current_time}")
 
-    anim = FuncAnimation(fig, update, frames=len(visualization_data), init_func=init, blit=False, interval=500)
+        return doctor_marker, frame_number_text
 
+    # Create the FuncAnimation
+    anim = FuncAnimation(
+        fig, update, frames=len(visualization_data), init_func=init, blit=False, interval=1
+    )
+
+    # Display the plot
     plt.tight_layout()
     plt.show()
+
 
 
 if __name__ == "__main__":
@@ -178,6 +199,8 @@ if __name__ == "__main__":
         doc_util_results.append(result["doc_util"])
         doc_center_results.append(result["doc_center"])
         waiting_results.append(result["avg_non_live_threatening_watiing_time_min"])
+    
+    print([result["visualization_data"][i]["total_time_passed"] for i in range(10)])
 
     # Call visualization functions
     dynamic_visualization(result["visualization_data"])
