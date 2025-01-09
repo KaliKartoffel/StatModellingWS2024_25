@@ -3,6 +3,7 @@ import math
 from collections import deque
 import numpy as np
 
+
 class Emergency:
         district = None
         start_time = None
@@ -11,6 +12,7 @@ class Emergency:
             self.district = district
             self.start_time = start_time
             self.prio = prio
+
 
 class EmergencySimulator:
     populations = [10000, 35000, 25000, 25000, 15000, 20000, 45000, 40000, 15000, 35000]
@@ -44,6 +46,7 @@ class EmergencySimulator:
     waiting_times_non_life_threatening = None
     life_threatening_emergencies = None
     non_life_threatening_emergencies = None
+    visualization_data = []
 
     def __init__(self, seed = 123):
         random.seed(seed)
@@ -194,9 +197,25 @@ class EmergencySimulator:
 
             self.wait_secs(time_to_pass)
 
+            # Collect data for visualization
+            self.visualization_data.append({
+
+                "total_time_passed": self.total_time_passed,
+                "current_dist": self.current_dist,
+                "currently_traveling": self.travel["currently_traveling"],
+                "currently_giving_care": self.travel["currently_giving_care"],
+                "time_remaining": self.travel["time_remaining"],
+                "target": self.travel["target"],
+                "going_towards_hq_dist": self.travel["going_towards_hq_dist"],
+                "life_threatening_emergencies": len(self.life_threatening_emergencies),
+                "non_life_threatening_emergencies": len(self.non_life_threatening_emergencies)
+            })
+            
         return {"doc_util": self.total_time_doctor_used/self.total_time_passed,
                 "doc_center": self.total_time_doctor_center/self.total_time_passed,
-                "avg_non_live_threatening_watiing_time_min": sum(self.waiting_times_non_life_threatening)/len(self.waiting_times_non_life_threatening)/60}
+                "avg_non_live_threatening_watiing_time_min": sum(self.waiting_times_non_life_threatening)/len(self.waiting_times_non_life_threatening)/60,
+                "visualization_data": self.visualization_data
+                }
 
     def test(self):
         return self.simulate(500)
