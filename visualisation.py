@@ -92,7 +92,7 @@ def dynamic_visualization(visualization_data):
 
     # Extract data for visualization
     times = [data["total_time_passed"] for data in visualization_data]
-    next_times = times.copy()
+    next_times = [0] + times.copy()
     current_districts = [data["current_dist"] for data in visualization_data]
 
     # Create circular graph layout
@@ -156,20 +156,25 @@ def dynamic_visualization(visualization_data):
             print("Error: Frame index out of range")
             return  # Prevent index errors
         
+        prev_time = 0 if frame == 0 else next_times[0]
         current_time = round(time.time() * 1000) - t0
-        next_time = next_times[0]
+        next_time = next_times[1]
 
-        # If the current time matches one of the times in the list, update the doctor's position
+        # If the current time has reached the next time in the list
         if current_time >= next_time:
-            print(f"found frame {next_time}")
-            
-            # Find the corresponding district for this time
-            idx = times.index(next_time)
-            doctor_pos = node_positions[current_districts[idx]]
-            doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])
-
-            # Update the next time
+            # Update times
+            prev_time = next_time
             next_times.pop(0)
+
+        # Interpolate the doctor's position between the previous and next time
+        if prev_time != 0:
+            alpha = (current_time - prev_time) / (next_time - prev_time)
+            prev_idx = times.index(prev_time)
+            next_idx = times.index(next_time)
+            prev_pos = node_positions[current_districts[prev_idx]]
+            next_pos = node_positions[current_districts[next_idx]]
+            doctor_pos = (prev_pos[0] + alpha * (next_pos[0] - prev_pos[0]), prev_pos[1] + alpha * (next_pos[1] - prev_pos[1]))
+            doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])
 
         # Update the frame number text
         frame_number_text.set_text(f"Time: {current_time}")
