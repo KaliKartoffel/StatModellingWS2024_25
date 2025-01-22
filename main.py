@@ -184,8 +184,8 @@ class EmergencySimulator:
             self.current_dist = self.travel["target"]
 
 
-    def simulate(self, total_time_hours=1):
 
+    def simulate(self, total_time_hours=1):
         max_time = total_time_hours * 3600
         while self.total_time_passed < max_time:
             self.generate_emergency()
@@ -197,6 +197,7 @@ class EmergencySimulator:
                 time_to_pass = self.time_to_next_emergency
 
             self.wait_secs(time_to_pass)
+
 
             # Collect data for visualization
             self.visualization_data.append({
@@ -218,16 +219,19 @@ class EmergencySimulator:
                 ],
                 "time_to_next_emergency": self.time_to_next_emergency,
             })
+        
+        # Handle empty waiting times list to avoid ZeroDivisionError
+        avg_waiting_time = (
+            sum(self.waiting_times_non_life_threatening) / len(self.waiting_times_non_life_threatening) / 60
+            if self.waiting_times_non_life_threatening
+            else 0
+        )
 
-        avg_non_live_threatening_waiting_time_min = (
-                sum(self.waiting_times_non_life_threatening)
-                / len(self.waiting_times_non_life_threatening)
-                / 60 )
 
         return {
             "doc_util": self.total_time_doctor_used / self.total_time_passed,
             "doc_center": self.total_time_doctor_center / self.total_time_passed,
-            "avg_non_live_threatening_waiting_time_min": avg_non_live_threatening_waiting_time_min,
+            "avg_non_live_threatening_waiting_time_min": avg_waiting_time,
             "visualization_data": self.visualization_data,
         }
 
