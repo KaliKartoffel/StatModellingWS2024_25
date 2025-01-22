@@ -13,7 +13,14 @@ def visualize_time_series(
         doc_center_results,
         waiting_results,
         ):
-    """Visualize doctor utilization, time at center, and waiting times."""
+    """
+    Visualize doctor utilization, time at center, and waiting times.
+    """
+
+    print(doc_center_results)
+    print(doc_util_results)
+    print(waiting_results)
+
     plt.figure(figsize=(12, 6))
     plt.plot(doc_util_results,
              label="Doctor Utilization")
@@ -35,20 +42,67 @@ def visualize_time_series(
     plt.ylabel("Frequency")
     plt.show()
 
-def dynamic_time_series(
-    visualization_data,
-    ):
+    # ########################################################
+    # ########################################################
+    #
+    # WHAT ABOUT WAITING TIMES FOR LIFE THREATENING EMERGENCIES
+    #
+    # ########################################################
+    # ########################################################
+
+
+def visualize_emergency_counts(visualization_data):
+    """
+    Plots the number of life-threatening and non-life-threatening emergencies with respect to time
+    """
+    times = [data["total_time_passed"] for data in visualization_data]
+
+    non_life_emergency_data = [data["non_life_threatening_emergencies"] for data in visualization_data]
+    life_emergency_data = [data["life_threatening_emergencies"] for data in visualization_data]
+
+    non_life_emergencies = [len(entry) for entry in non_life_emergency_data]
+    life_emergencies = [len(entry) for entry in life_emergency_data]
+
+    # filter out empty points
+    """ empty_points = []
+    for i in range(len(times)-1):
+        if non_life_emergencies[i] == 0 and life_emergencies[i] == 0:
+            empty_points.append(i)
+
+    for i in empty_points[::-1]:
+        times.pop(i)
+        non_life_emergencies.pop(i)
+        life_emergencies.pop(i) """
+
+    print([[times[i], life_emergencies[i], non_life_emergencies[i]] for i in range(10)])
+
+    plt.figure(figsize=(12, 6))
+
+    plt.scatter(times, life_emergencies, label="Life-Threatening Emergencies", color="red")
+    plt.scatter(times, non_life_emergencies, label="Non-Life-Threatening Emergencies", color="blue")
+    plt.xlabel("Time")
+    plt.ylabel("Number of Emergencies")
+    plt.title("Number of Emergencies Over Time")
+    plt.legend()
+    plt.show()
+
+
+def dynamic_time_series(visualization_data):
+    """
+    Dynamic visualization of emergency counts over time.
+    """
+
     # Extract data for visualization
     times = [
         data["total_time_passed"]
         for data in visualization_data
         ]
     life_emergencies = [
-        data["life_threatening_emergencies"]
+        len(data["life_threatening_emergencies"])
         for data in visualization_data
         ]
     non_life_emergencies = [
-        data["non_life_threatening_emergencies"]
+        len(data["non_life_threatening_emergencies"])
         for data in visualization_data
         ]
 
@@ -140,32 +194,22 @@ def dynamic_visualization(visualization_data):
     ]
 
     # Extract data for visualization
-    times = [data["total_time_passed"]
-             for data in visualization_data]
-    next_times = [0] + times.copy()
-    current_districts = [data["current_dist"]
-                         for data in visualization_data]
+    times = [data["total_time_passed"] for data in visualization_data]
+    current_districts = [data["current_dist"] for data in visualization_data]
 
     # Create circular graph layout
     num_districts = len(populations)
     angles = np.linspace(0, 2 * np.pi, num_districts, endpoint=False)
-    node_positions = {i: (np.cos(angle),
-                          np.sin(angle))
-                      for i, angle in enumerate(angles)}
+    node_positions = {i: (np.cos(angle), np.sin(angle)) for i, angle in enumerate(angles)}
 
     # Normalize population and travel duration for visualization
     max_pop = max(populations)
-    max_travel = max(max(row)
-                     for row in avg_travel_times)
-    node_sizes = [300 + 1000 * (pop / max_pop)
-                  for pop in populations]  # Scaled sizes
+    max_travel = max(max(row) for row in avg_travel_times)
+    node_sizes = [300 + 1000 * (pop / max_pop) for pop in populations]  # Scaled sizes
     edge_widths = np.array(avg_travel_times) / max_travel * 3  # Scaled widths for edges
 
     # Create the figure and axes, arranging them horizontally
-    fig, ax = plt.subplots(1, 1,
-                           figsize=(18, 6),
-                           sharex=False,
-                           )
+    fig, ax = plt.subplots(1, 1, figsize=(8, 8), sharex=False)
 
     # Circular graph of districts
     ax.set_title("Districts and Doctor's Movement")
@@ -176,56 +220,38 @@ def dynamic_visualization(visualization_data):
         for j in range(num_districts):
             if i != j:  # Avoid self-loops
                 ax.plot(
-                    [node_positions[i][0],
-                     node_positions[j][0],
-                     ],
-                    [node_positions[i][1],
-                     node_positions[j][1],
-                     ],
+                    [node_positions[i][0], node_positions[j][0]],
+                    [node_positions[i][1], node_positions[j][1]],
                     color="gray",
                     lw=edge_widths[i][j],
                 )
-    node_scatter = ax.scatter( 
+    node_scatter = ax.scatter(
         [pos[0] for pos in node_positions.values()],
         [pos[1] for pos in node_positions.values()],
         s=node_sizes,
         c="lightblue",
         edgecolor="black",
-        label="Districts"
+        label="Districts",
+        zorder=2  # Ensure nodes are on top of edges but below doctor
     )
 
     # Add district labels (1-10)
     for i, (x, y) in node_positions.items():
-        ax.text(
-            x * 1.1,
-            y * 1.1,
-            str(i + 1),
-            color="black",
-            ha="center",
-            va="center",
-            fontsize=12,
-            )
+        ax.text(x * 1.1,
+                y * 1.1,
+                str(i + 1),
+                color="black",
+                ha="center",
+                va="center",
+                fontsize=12)
 
-    doctor_marker, = ax.plot(
-        [],
-        [],
-        "ro",
-        label="Doctor",
-        markersize=10,
-        )
+    doctor_marker, = ax.plot([], [], "ro", label="Doctor", markersize=10)
     ax.legend()
 
     # Initialize the figure and plot elements
     frame_number_text = ax.text(
-        0.05,
-        0.95,
-        "",
-        transform=ax.transAxes,
-        fontsize=12,
-        color="black",
-        ha="left",
-        va="top",
-        )
+        0.05, 0.95, "", transform=ax.transAxes, fontsize=12, color="black", ha="left", va="top"
+    )
     t0 = round(time.time() * 1000)
 
     def init():
@@ -236,48 +262,41 @@ def dynamic_visualization(visualization_data):
 
     def update(frame):
         """Update the lines and scatter with new data."""
-        if frame >= max(times):
-            print("Error: Frame index out of range")
-            return  # Prevent index errors
-        
-        prev_time = next_times[0]
         current_time = round(time.time() * 1000) - t0
-        next_time = next_times[1]
 
-        # If the current time has reached the next time in the list
-        if current_time >= next_time:
-            # Update times
-            prev_time = next_time
-            next_times.pop(0)
+        # Find the two districts to interpolate between
+        for i in range(len(times) - 1):
+            if times[i] <= current_time <= times[i + 1]:
+                # Calculate interpolation factor
+                alpha = (current_time - times[i]) / (times[i + 1] - times[i])
 
-        # Interpolate the doctor's position between the previous and next time
-        if prev_time != 0:
-            alpha = (current_time - prev_time) / (next_time - prev_time)
-            prev_idx = times.index(prev_time)
-            next_idx = times.index(next_time)
-            prev_pos = node_positions[current_districts[prev_idx]]
-            next_pos = node_positions[current_districts[next_idx]]
-            doctor_pos = (prev_pos[0] + alpha * (next_pos[0] - prev_pos[0]), prev_pos[1] + alpha * (next_pos[1] - prev_pos[1]))
-            doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])
+                # Interpolate position
+                prev_pos = node_positions[current_districts[i]]
+                next_pos = node_positions[current_districts[i + 1]]
+                doctor_pos = (
+                    prev_pos[0] + alpha * (next_pos[0] - prev_pos[0]),
+                    prev_pos[1] + alpha * (next_pos[1] - prev_pos[1])
+                )
+                doctor_marker.set_data([doctor_pos[0]], [doctor_pos[1]])
 
-        # Update the frame number text
+                # Update frame number text
+                frame_number_text.set_text(f"Time: {current_time}")
+                return doctor_marker, frame_number_text
+
+        # If no match, keep the doctor stationary
+        doctor_marker.set_data([], [])
         frame_number_text.set_text(f"Time: {current_time}")
-
         return doctor_marker, frame_number_text
 
     # Create the FuncAnimation
     anim = FuncAnimation(
-        fig,
-        update,
-        frames=len(visualization_data),
-        init_func=init,
-        blit=False,
-        interval=1,
+        fig, update, frames=len(visualization_data), init_func=init, blit=False, interval=1
     )
 
     # Display the plot
     plt.tight_layout()
     plt.show()
+
 
 
 
@@ -287,18 +306,36 @@ if __name__ == "__main__":
     doc_center_results = []
     waiting_results = []
 
-    for i in range(1):  # Run fewer simulations for faster testing
+    for i in range(100):
         es = EmergencySimulator(seed=i)
         result = es.simulate(1000)
         doc_util_results.append(result["doc_util"])
         doc_center_results.append(result["doc_center"])
-        waiting_results.append(result["avg_non_live_threatening_watiing_time_min"])
+        waiting_results.append(result["avg_non_live_threatening_waiting_time_min"])
     
-    print([result["visualization_data"][i]["total_time_passed"] for i in range(10)])
+    print(len(waiting_results))
+    # print([result["visualization_data"][i]["total_time_passed"] for i in range(10)])
 
-    # Call visualization functions
-    dynamic_visualization(result["visualization_data"])
+    while True:
 
-    # Animate playback
-    # simulator = EmergencySimulator(seed=123)
-    # visualize_simulation_playback(simulator, total_time_hours=1)
+        selected_visualisation = int(input("Select visualisation (1: Time Series, 2: Dynamic, 3: Emergencies, 4: Playback): "))
+
+        if selected_visualisation == 1:
+            visualize_time_series(doc_util_results, doc_center_results, waiting_results)
+        elif selected_visualisation == 2:
+            dynamic_time_series(result["visualization_data"])
+        elif selected_visualisation == 3:
+            visualize_emergency_counts(result["visualization_data"])
+        elif selected_visualisation == 4:
+            simulator = EmergencySimulator(seed=123)
+            result = simulator.simulate(100)
+            dynamic_visualization(result["visualization_data"])
+            break
+        elif selected_visualisation == 0:
+            break
+
+        else:
+            print(len([ entry["total_time_passed"] for entry in result["visualization_data"] ]))
+            print(len([ entry["non_life_threatening_emergencies"] for entry in result["visualization_data"] ]))
+            print([result["visualization_data"][i]["life_threatening_emergencies"] for i in range(10)])
+            print([result["visualization_data"][i]["non_life_threatening_emergencies"] for i in range(10)])

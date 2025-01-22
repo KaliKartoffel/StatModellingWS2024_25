@@ -62,7 +62,7 @@ class EmergencySimulator:
         else:
             avg_travel_time_sec = round(self.avg_travel_times[dist1][dist3]*60*ratio_traveled + self.avg_travel_times[dist2][dist3]*60*(1-ratio_traveled))
 
-        return random.randint(round(avg_travel_time_sec*0.5), round(avg_travel_time_sec*1.5))
+        return random.randint(round(avg_travel_time_sec*0.9), round(avg_travel_time_sec*1.1))
     
     def get_time_to_next_event(self):
         mean_interval_seconds = 50 * 60
@@ -185,11 +185,12 @@ class EmergencySimulator:
 
 
     def simulate(self, total_time_hours=1):
-        max_time = total_time_hours*3600
-        while(self.total_time_passed < max_time):
+
+        max_time = total_time_hours * 3600
+        while self.total_time_passed < max_time:
             self.generate_emergency()
             self.check_travel()
-            
+
             if self.travel["time_remaining"]:
                 time_to_pass = min(self.travel["time_remaining"], self.time_to_next_emergency)
             else:
@@ -199,7 +200,6 @@ class EmergencySimulator:
 
             # Collect data for visualization
             self.visualization_data.append({
-
                 "total_time_passed": self.total_time_passed,
                 "current_dist": self.current_dist,
                 "currently_traveling": self.travel["currently_traveling"],
@@ -207,15 +207,29 @@ class EmergencySimulator:
                 "time_remaining": self.travel["time_remaining"],
                 "target": self.travel["target"],
                 "going_towards_hq_dist": self.travel["going_towards_hq_dist"],
-                "life_threatening_emergencies": len(self.life_threatening_emergencies),
-                "non_life_threatening_emergencies": len(self.non_life_threatening_emergencies)
+                # Add detailed emergency data here
+                "life_threatening_emergencies": [
+                    {"district": em.district, "prio": em.prio}
+                    for em in self.life_threatening_emergencies
+                ],
+                "non_life_threatening_emergencies": [
+                    {"district": em.district, "prio": em.prio}
+                    for em in self.non_life_threatening_emergencies
+                ],
+                "time_to_next_emergency": self.time_to_next_emergency,
             })
-            
-        return {"doc_util": self.total_time_doctor_used/self.total_time_passed,
-                "doc_center": self.total_time_doctor_center/self.total_time_passed,
-                "avg_non_live_threatening_watiing_time_min": sum(self.waiting_times_non_life_threatening)/len(self.waiting_times_non_life_threatening)/60,
-                "visualization_data": self.visualization_data
-                }
+
+        avg_non_live_threatening_waiting_time_min = (
+                sum(self.waiting_times_non_life_threatening)
+                / len(self.waiting_times_non_life_threatening)
+                / 60 )
+
+        return {
+            "doc_util": self.total_time_doctor_used / self.total_time_passed,
+            "doc_center": self.total_time_doctor_center / self.total_time_passed,
+            "avg_non_live_threatening_waiting_time_min": avg_non_live_threatening_waiting_time_min,
+            "visualization_data": self.visualization_data,
+        }
 
     def test(self):
         return self.simulate(500)
@@ -227,17 +241,17 @@ if __name__ == "__main__":
     waiting_results = []
 
     es = EmergencySimulator(seed=40)
-    print(es.simulate(1000))
+    # print(es.simulate(1000))
 
     for i in range(100):
-        print("done:", i)
+        # print("done:", i)
         es = EmergencySimulator(seed=i)
         result = es.simulate(1000)
         doc_util_results.append(result["doc_util"])
         doc_center_results.append(result["doc_center"])
-        waiting_results.append(result["avg_non_live_threatening_watiing_time_min"])
+        waiting_results.append(result["avg_non_live_threatening_waiting_time_min"])
 
-    print(waiting_results)
+    # print(waiting_results)
 
     doc_util_average = np.mean(doc_util_results)
     doc_util_std_deviation = np.std(doc_util_results)
