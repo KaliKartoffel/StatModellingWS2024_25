@@ -49,6 +49,12 @@ class ExtendedEmergencySimulator(EmergencySimulator):
                                                                 em.district))
             queue.remove(emergency)
 
+        elif self.strategy == "high_priority_first":
+            # Select high-priority emergencies first
+            emergency = max(queue, key=lambda em: em.prio)
+            queue.remove(emergency)
+
+
         # Update doctor's status
         doctor = self.doctor_status[doctor_idx]
         travel_time = self.get_travel_time(doctor["current_location"], emergency.district)
@@ -103,16 +109,35 @@ class ExtendedEmergencySimulator(EmergencySimulator):
 
 
 if __name__ == "__main__":
-    # Example configurations
-    num_hqs = 3  # Number of HQs
-    num_vehicles = 2  # Number of doctors/vehicles
-    strategies = ["fifo", "nearest"]  # Strategies to compare
+    # Number of headquarters
+    hq_configs = [1, 2, 3, 5]  
+    # Number of doctors/vehicles
+    num_vehicles = 2  
+    strategies = ["fifo", "nearest", "high_priority_first"]  
+    simulation_hours = 10
 
-    for strategy in strategies:
-        print(f"Running simulation with strategy: {strategy}")
-        sim = ExtendedEmergencySimulator(num_hqs=num_hqs, num_vehicles=num_vehicles, strategy=strategy, seed=42)
-        results = sim.simulate(10)  # Simulate 10 hours
-        print(f"Strategy: {strategy}")
-        print(f"Average Travel Time (minutes): {results['avg_travel_time']:.2f}")
-        print(f"Remaining Emergencies in Queues: {results['emergency_queues']}")
-        print("-" * 50)
+    for num_hqs in hq_configs:
+        print(f"Testing with {num_hqs} headquarters...")
+        results_per_hq = []
+        for strategy in strategies:
+            print(f"Running simulation with strategy: {strategy}")
+            sim = ExtendedEmergencySimulator(num_hqs=num_hqs, num_vehicles=num_vehicles, strategy=strategy, seed=42)
+            # Simulate for 10 hours
+            results = sim.simulate(simulation_hours)  
+            results_per_hq.append({
+                "strategy": strategy,
+                "avg_travel_time": results["avg_travel_time"],
+                "remaining_queues": results["emergency_queues"]
+            })
+            print(f"Strategy: {strategy}")
+            print(f"Average Travel Time (minutes): {results['avg_travel_time']:.2f}")
+            print(f"Remaining Emergencies in Queues: {results['emergency_queues']}")
+            print("-" * 50)
+
+        # Compare results across strategies for the current HQ configuration
+        print(f"Results for {num_hqs} headquarters:")
+        for result in results_per_hq:
+            print(f"Strategy: {result['strategy']}, Avg Travel Time: {result['avg_travel_time']:.2f} minutes, "
+                  f"Remaining Queues: {result['remaining_queues']}")
+        print("=" * 50)
+
