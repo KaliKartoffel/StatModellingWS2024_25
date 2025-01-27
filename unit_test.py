@@ -56,18 +56,18 @@ class TestEmergencySimulator(unittest.TestCase):
             print("Simulation Results:")
             print(f"Doctor Utilization: {result['doc_util']}")
             print(f"Doctor Time at Center: {result['doc_center']}")
-            print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_watiing_time_min']}")
+            print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_waiting_time_min']}")
             self.assertIn("doc_util", result)
             self.assertIn("doc_center", result)
-            self.assertIn("avg_non_live_threatening_watiing_time_min", result)
+            self.assertIn("avg_non_live_threatening_waiting_time_min", result)
 
             # Handle division by zero case for non-life-threatening emergencies
             if len(self.simulator.waiting_times_non_life_threatening) == 0:
                 print("No non-life-threatening emergencies handled during simulation.")
-                self.assertEqual(result["avg_non_live_threatening_watiing_time_min"], 0,
+                self.assertEqual(result["avg_non_live_threatening_waiting_time_min"], 0,
                                  "Average waiting time should be 0 when no emergencies are handled.")
             else:
-                self.assertGreaterEqual(result["avg_non_live_threatening_watiing_time_min"], 0,
+                self.assertGreaterEqual(result["avg_non_live_threatening_waiting_time_min"], 0,
                                         "Average waiting time is negative.")
         except ZeroDivisionError:
             print("ZeroDivisionError caught: No non-life-threatening emergencies were processed.")

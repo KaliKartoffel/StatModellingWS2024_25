@@ -18,7 +18,7 @@ class ScenarioBasedTest(unittest.TestCase):
         print(f"Life-Threatening Emergencies Remaining: {len(self.simulator.life_threatening_emergencies)}")
         print(f"Doctor Utilization: {result['doc_util']}")
         print(f"Doctor Time at Center: {result['doc_center']}")
-        print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_watiing_time_min']}")
+        print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_waiting_time_min']}")
 
         # Assert that the life-threatening emergency was processed
         self.assertEqual(len(self.simulator.life_threatening_emergencies), 0,
@@ -41,7 +41,7 @@ class ScenarioBasedTest(unittest.TestCase):
         print(f"Non-Life-Threatening Emergencies Remaining: {len(self.simulator.non_life_threatening_emergencies)}")
         print(f"Doctor Utilization: {result['doc_util']}")
         print(f"Doctor Time at Center: {result['doc_center']}")
-        print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_watiing_time_min']}")
+        print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_waiting_time_min']}")
 
         # Assert life-threatening emergency was handled first
         self.assertEqual(len(self.simulator.life_threatening_emergencies), 0,
