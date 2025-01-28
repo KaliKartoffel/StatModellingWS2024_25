@@ -34,7 +34,7 @@ class EdgeCaseTests(unittest.TestCase):
         print("Edge Case Test Results (One Emergency):")
         print(f"Doctor Utilization: {result['doc_util']}")
         print(f"Doctor Time at Center: {result['doc_center']}")
-        print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_watiing_time_min']}")
+        print(f"Avg Non-Life-Threatening Waiting Time (mins): {result['avg_non_live_threatening_waiting_time_min']}")
 
 
         self.assertEqual(len(self.simulator.life_threatening_emergencies), 0,

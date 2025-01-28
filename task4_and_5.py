@@ -32,7 +32,7 @@ class ExtendedEmergencySimulator(EmergencySimulator):
 
             # Assign emergency to the first queue (for simplicity)
             self.emergency_queues[0].append(emergency)
-            print(f"New emergency added: {emergency.district}, Priority: {emergency.prio}")
+            # print(f"New emergency added: {emergency.district}, Priority: {emergency.prio}")
 
     def assign_doctor(self, doctor_idx):
         """Assigns the doctor to an emergency."""
@@ -65,7 +65,7 @@ class ExtendedEmergencySimulator(EmergencySimulator):
         self.travel_time_sum += travel_time
         self.travel_count += 1
         doctor["current_location"] = emergency.district
-        print(f"Doctor {doctor_idx} assigned to emergency at district {emergency.district}")
+        # print(f"Doctor {doctor_idx} assigned to emergency at district {emergency.district}")
 
     def update_doctors(self, time_step):
         """Update the status of all doctors and manage their tasks."""
@@ -74,7 +74,7 @@ class ExtendedEmergencySimulator(EmergencySimulator):
                 doctor["time_remaining"] -= time_step
                 if doctor["time_remaining"] <= 0:
                     doctor["busy"] = False
-                    print(f"Doctor {i} has finished their task and is now idle.")
+                    # print(f"Doctor {i} has finished their task and is now idle.")
 
     def simulate(self, total_time_hours=10):
         max_time = total_time_hours * 3600  # Convert hours to seconds
@@ -95,10 +95,10 @@ class ExtendedEmergencySimulator(EmergencySimulator):
             self.total_time_passed += 1
 
             # Debugging: Print queue and doctor statuses
-            if self.total_time_passed % 3600 == 0:  # Every simulated hour
-                print(f"Time: {self.total_time_passed} seconds")
-                print(f"Queues: {[len(queue) for queue in self.emergency_queues]}")
-                print(f"Doctors: {self.doctor_status}")
+            # if self.total_time_passed % 3600 == 0:  # Every simulated hour
+                # print(f"Time: {self.total_time_passed} seconds")
+                # print(f"Queues: {[len(queue) for queue in self.emergency_queues]}")
+                # print(f"Doctors: {self.doctor_status}")
 
         # Calculate average travel time
         avg_travel_time = self.travel_time_sum / self.travel_count if self.travel_count > 0 else 0

@@ -3,9 +3,12 @@ import seaborn as sns
 import networkx as nx
 import pandas as pd
 import numpy as np
+import random
 from matplotlib.animation import FuncAnimation
 import time
+
 from main import EmergencySimulator  # Importing the classes from main.py
+from task4_and_5 import ExtendedEmergencySimulator
 
 
 def visualize_time_series(
@@ -298,6 +301,65 @@ def dynamic_visualization(visualization_data):
     plt.show()
 
 
+def advanced_simulation_results(strategies, hq_configs, num_simulations, results):
+    """
+    Creates scatter plots for simulation results, with the number of HQs on the x-axis and
+    multiple data series corresponding to strategies.
+
+    :param strategies: List of strategies used in the simulation.
+    :param hq_configs: List of HQ configurations used in the simulation.
+    :param num_simulations: Number of simulations to average per configuration.
+    :param results: Dictionary with the structure:
+                    {
+                        hq_config_1: {
+                            strategy_1: [{"avg_travel_time": ..., "remaining_queues": [...]}, ...],
+                            strategy_2: [...],
+                        },
+                        hq_config_2: {...},
+                        ...
+                    }
+    """
+    # Prepare data for plotting
+    plot_data = []
+    for hq in hq_configs:
+        for strategy in strategies:
+            # Average across multiple simulations
+            avg_travel_time = sum(run["avg_travel_time"] for run in results[hq][strategy]) / num_simulations
+            avg_remaining_queues = sum(sum(run["remaining_queues"]) for run in results[hq][strategy]) / num_simulations
+
+            plot_data.append({
+                "HQs": hq,
+                "Strategy": strategy,
+                "Average Travel Time (minutes)": avg_travel_time,
+                "Average Remaining Emergencies": avg_remaining_queues,
+            })
+
+    # Convert to DataFrame for Seaborn
+    df = pd.DataFrame(plot_data)
+
+    # Scatter plot for Average Travel Time
+    plt.figure(figsize=(12, 6))
+    sns.scatterplot(data=df, x="HQs", y="Average Travel Time (minutes)", hue="Strategy", s=100)
+    plt.title("Average Travel Time vs Number of HQs")
+    plt.xlabel("Number of Headquarters")
+    plt.ylabel("Average Travel Time (minutes)")
+    plt.xticks(ticks=hq_configs)  # Set x-axis to show only integers
+    plt.grid(True)
+    plt.legend(title="Strategy")
+    plt.show()
+
+    # Scatter plot for Average Remaining Emergencies
+    plt.figure(figsize=(12, 6))
+    sns.scatterplot(data=df, x="HQs", y="Average Remaining Emergencies", hue="Strategy", s=100)
+    plt.title("Average Remaining Emergencies vs Number of HQs")
+    plt.xlabel("Number of Headquarters")
+    plt.ylabel("Average Remaining Emergencies")
+    plt.xticks(ticks=hq_configs)  # Set x-axis to show only integers
+    plt.grid(True)
+    plt.legend(title="Strategy")
+    plt.show()
+
+
 
 
 if __name__ == "__main__":
@@ -306,7 +368,7 @@ if __name__ == "__main__":
     doc_center_results = []
     waiting_results = []
 
-    for i in range(100):
+    for i in range(0):
         es = EmergencySimulator(seed=i)
         result = es.simulate(1000)
         doc_util_results.append(result["doc_util"])
@@ -316,7 +378,7 @@ if __name__ == "__main__":
     print(len(waiting_results))
     # print([result["visualization_data"][i]["total_time_passed"] for i in range(10)])
 
-    while True:
+    while False:
 
         selected_visualisation = int(input("Select visualisation (1: Time Series, 2: Dynamic, 3: Emergencies, 4: Playback): "))
 
@@ -339,3 +401,28 @@ if __name__ == "__main__":
             print(len([ entry["non_life_threatening_emergencies"] for entry in result["visualization_data"] ]))
             print([result["visualization_data"][i]["life_threatening_emergencies"] for i in range(10)])
             print([result["visualization_data"][i]["non_life_threatening_emergencies"] for i in range(10)])
+
+
+    # Advanced simulation results
+    hq_configs = range(1, 10)  # Integer range of HQs
+    num_vehicles = 2
+    strategies = ["fifo", "nearest", "high_priority_first"]
+    simulation_hours = 10
+    num_simulations = 1  # Number of simulations per configuration
+
+    results = {}
+    for num_hqs in hq_configs:
+        results[num_hqs] = {}
+        for strategy in strategies:
+            results[num_hqs][strategy] = []
+            for _ in range(num_simulations):
+                sim = ExtendedEmergencySimulator(num_hqs=num_hqs, num_vehicles=num_vehicles, strategy=strategy, seed=42)
+                simulation_result = sim.simulate(simulation_hours)
+                results[num_hqs][strategy].append({
+                    "avg_travel_time": simulation_result["avg_travel_time"],
+                    "remaining_queues": simulation_result["emergency_queues"]
+                })
+
+    # Generate scatter plots
+    #advanced_simulation_results(strategies, hq_configs, num_simulations, results)
+
