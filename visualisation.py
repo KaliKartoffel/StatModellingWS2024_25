@@ -408,7 +408,7 @@ if __name__ == "__main__":
     num_vehicles = 2
     strategies = ["fifo", "nearest", "high_priority_first"]
     simulation_hours = 10
-    num_simulations = 1  # Number of simulations per configuration
+    num_simulations = 1000  # Number of simulations per configuration
 
     results = {}
     for num_hqs in hq_configs:
@@ -416,7 +416,8 @@ if __name__ == "__main__":
         for strategy in strategies:
             results[num_hqs][strategy] = []
             for _ in range(num_simulations):
-                sim = ExtendedEmergencySimulator(num_hqs=num_hqs, num_vehicles=num_vehicles, strategy=strategy, seed=42)
+                print(f"Running simulation with {num_hqs} headquarters and strategy: {strategy}", end="\r")
+                sim = ExtendedEmergencySimulator(num_hqs=num_hqs, num_vehicles=num_vehicles, strategy=strategy, seed=random.randint(0, 1000))
                 simulation_result = sim.simulate(simulation_hours)
                 results[num_hqs][strategy].append({
                     "avg_travel_time": simulation_result["avg_travel_time"],
@@ -424,5 +425,5 @@ if __name__ == "__main__":
                 })
 
     # Generate scatter plots
-    #advanced_simulation_results(strategies, hq_configs, num_simulations, results)
+    advanced_simulation_results(strategies, hq_configs, num_simulations, results)
 
