@@ -3,6 +3,15 @@ import random
 import pandas as pd
 
 
+class Emergency:
+    district = None
+    start_time = None
+    prio = None
+    def __init__(self, district, start_time, prio):
+        self.district = district
+        self.start_time = start_time
+        self.prio = prio
+
 class EmergencySimulator:
     def __init__(
         self,
